@@ -1,0 +1,5 @@
+{
+  "typescript.suggest.completeJSDocs": true,
+  "js/ts.implicitProjectConfig.checkJs": true,
+  "editor.formatOnSave": true
+}
