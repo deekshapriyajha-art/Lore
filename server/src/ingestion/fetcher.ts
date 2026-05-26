@@ -35,17 +35,30 @@ function parseGitHubUrl(url: string): {
         return { owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
     }
 
-    const match = url.match(
-        /github\.com\/([^/]+)\/([^/]+)(?:\/blob\/([^/]+)\/(.+))?/
+    const blobMatch = url.match(
+        /github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)/
     )
-    if (!match) throw new Error(`Unsupported GitHub URL: ${url}`)
+    if (blobMatch) {
 
-    return {
-        owner: match[1],
-        repo: match[2],
-        branch: match[3],
-        filePath: match[4]
+        return {
+            owner: blobMatch[1],
+            repo: blobMatch[2],
+            branch: blobMatch[3],
+            filePath: blobMatch[4]
+        }
     }
+
+    const repoMatch = url.match(
+        /github\.com\/([^/]+)\/([^/]+)/
+    )
+    if (repoMatch) {
+        return {
+            owner: repoMatch[1],
+            repo: repoMatch[2]
+        }
+    }
+
+    throw new Error(`Unsupported GitHub URL: ${url}`)
 }
 
 /**
@@ -59,6 +72,10 @@ export async function fetchGitHubContent(url: string): Promise<string> {
     if (process.env.GITHUB_TOKEN) {
         headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
     }
+
+    const parsed = parseGitHubUrl(url)
+
+    logger.info({ parsed }, 'Parsed GitHub URL')
 
     const { owner, repo, branch: urlBranch, filePath: urlFilePath } = parseGitHubUrl(url)
 
