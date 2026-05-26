@@ -4,31 +4,47 @@ dotenv.config();
 import express from 'express';
 import logger from './lib/logger';
 import { ingestRouter } from './routes/ingest';
+import { retrieveRelevantChunks } from './query/retriever'
+import { queryRouter } from './routes/query';
 
-console.log('ingestRouter:', ingestRouter);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-app.use((req, _res, next) => {
-    console.log(`→ ${req.method} ${req.url} | body: ${JSON.stringify(req.body)}`)
-    next()
-})
+// Temporary test route
+app.get('/test-retriever', async (req, res) => {
+    try {
+        const question = (req.query.q as string) || 'How do I add middleware in Express?'
 
-app.post('/test-post', (_req, res) => {
-    res.json({ works: true })
-});
+        logger.info({ question }, 'Testing retriever')
+
+        const chunks = await retrieveRelevantChunks(question, 5)
+
+        res.json({
+            question,
+            totalChunks: chunks.length,
+            chunks: chunks.map(chunk => ({
+                title: chunk.title,
+                heading: chunk.heading,
+                sourceUrl: chunk.source_url,
+                similarity: chunk.similarity,
+                preview: chunk.content.slice(0, 150) + '...'   // first 150 chars only
+            }))
+        })
+    } catch (err) {
+        logger.error({ error: err instanceof Error ? err.message : err }, 'Retriever test failed')
+        res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' })
+    }
+})
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'lore-api' })
 });
 
 app.use('/api', ingestRouter);
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`)
-    next()
-})
+app.use('/api', queryRouter);
+
 app.listen(PORT, () => {
     logger.info({ port: PORT }, 'Lore API is running');
 });
