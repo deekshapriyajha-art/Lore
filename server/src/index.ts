@@ -6,6 +6,7 @@ import logger from './lib/logger';
 import { ingestRouter } from './routes/ingest';
 import { retrieveRelevantChunks } from './query/retriever'
 import { queryRouter } from './routes/query';
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -44,6 +45,8 @@ app.get('/health', (req, res) => {
 
 app.use('/api', ingestRouter);
 app.use('/api', queryRouter);
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     logger.info({ port: PORT }, 'Lore API is running');
