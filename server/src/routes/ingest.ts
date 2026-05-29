@@ -4,6 +4,7 @@ import { runIngestionPipeline } from '../ingestion/pipeline'
 import { createIngestionJob } from '../db/jobs'
 import { getJobById } from '../db/jobs'
 import { getAllDocuments, getDocumentById, deleteDocumentById } from '../db/documents'
+import { ingestLimiter } from '../middleware/rateLimiter'
 
 export const ingestRouter = Router()
 
@@ -17,7 +18,7 @@ interface IdParam {
 }
 
 // /api/ingest 
-ingestRouter.post('/ingest', async (req: Request, res: Response) => {
+ingestRouter.post('/ingest', ingestLimiter, async (req: Request, res: Response) => {
     const result = IngestSchema.safeParse(req.body)
     if (!result.success) {
         return res.status(422).json({ error: result.error.flatten() })

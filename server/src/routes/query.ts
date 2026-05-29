@@ -4,6 +4,7 @@ import { retrieveRelevantChunks } from '../query/retriever'
 import { buildPrompt } from '../query/prompt-builder'
 import { streamResponse } from '../query/client'
 import logger from '../lib/logger'
+import { queryLimiter } from '../middleware/rateLimiter'
 
 export const queryRouter = Router();
 
@@ -12,7 +13,7 @@ const QuerySchema = z.object({
 })
 
 // validates question, calls retriever, builds prompt, streams response back
-queryRouter.post('/query', async (req: Request, res: Response) => {
+queryRouter.post('/query', queryLimiter, async (req: Request, res: Response) => {
     const result = QuerySchema.safeParse(req.body);
 
     if (!result.success) {
