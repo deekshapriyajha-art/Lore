@@ -17,6 +17,11 @@ export function errorHandler(
     res: Response,
     next: NextFunction
 ): void {
+    // CORS error
+    if (err.message.startsWith('CORS:')) {
+        res.status(403).json({ error: 'Origin not allowed' })
+        return
+    }
     if (err instanceof AppError) {
         logger.warn({
             statusCode: err.statusCode,
