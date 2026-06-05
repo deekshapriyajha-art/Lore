@@ -73,29 +73,48 @@ export async function fetchGitHubContent(url: string): Promise<string> {
         headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
     }
 
-    const parsed = parseGitHubUrl(url)
-
-    logger.info({ parsed }, 'Parsed GitHub URL')
-
     const { owner, repo, branch: urlBranch, filePath: urlFilePath } = parseGitHubUrl(url)
-
-    // Use branch from URL if provided, otherwise detect from GitHub API
     const branch = urlBranch ?? await getDefaultBranch(owner, repo, headers)
     logger.info({ owner, repo, branch }, 'Resolved branch')
 
-    // Try both README.md and Readme.md casing
-    const filePathsToTry = urlFilePath
-        ? [urlFilePath]
-        : ['README.md', 'Readme.md', 'readme.md']
+    // If a specific file path was given — fetch it directly
+    if (urlFilePath) {
+        // Try the exact path first, then .mdx variant if .md fails
+        const filePathsToTry = [urlFilePath]
+        if (urlFilePath.endsWith('.md')) {
+            filePathsToTry.push(urlFilePath.replace(/\.md$/, '.mdx'))
+        } else if (urlFilePath.endsWith('.mdx')) {
+            filePathsToTry.push(urlFilePath.replace(/\.mdx$/, '.md'))
+        }
 
-    for (const filePath of filePathsToTry) {
+        for (const filePath of filePathsToTry) {
+            try {
+                const rawUrl = `${RAW_BASE}/${owner}/${repo}/${branch}/${filePath}`
+                logger.info({ rawUrl }, 'Fetching URL')
+                const { data } = await axios.get<string>(rawUrl, {
+                    headers,
+                    responseType: 'text'
+                })
+                logger.info({ filePath }, 'Fetch successful')
+                return data
+            } catch (err: any) {
+                if (err.response?.status === 404) {
+                    logger.warn({ filePath }, 'File not found, trying next')
+                    continue
+                }
+                throw err
+            }
+        }
+
+        throw new Error(`Could not find file ${urlFilePath} in ${owner}/${repo} on branch ${branch}`)
+    }
+    // No specific file — try common README casings
+    const filesToTry = ['README.md', 'Readme.md', 'readme.md']
+    for (const filePath of filesToTry) {
         try {
             const rawUrl = `${RAW_BASE}/${owner}/${repo}/${branch}/${filePath}`
             logger.info({ rawUrl }, 'Fetching URL')
-            const { data } = await axios.get<string>(rawUrl, {
-                headers,
-                responseType: 'text'
-            })
+            const { data } = await axios.get<string>(rawUrl, { headers, responseType: 'text' })
             logger.info({ filePath }, 'Fetch successful')
             return data
         } catch (err: any) {
