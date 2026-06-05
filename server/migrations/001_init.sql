@@ -33,7 +33,7 @@ CREATE TABLE embeddings (
 CREATE TABLE ingestion_jobs (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   source_url  TEXT NOT NULL,
-  document_id UUID REFERENCES documents(id),
+  document_id UUID REFERENCES documents(id) ON DELETE SET NULL,
   status      TEXT NOT NULL DEFAULT 'queued',
   error       TEXT,
   started_at  TIMESTAMPTZ,
