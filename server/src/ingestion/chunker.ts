@@ -1,8 +1,8 @@
 import { marked, Token } from 'marked'
 import { Chunk } from '../types/ingestion'
 
-const MAX_TOKENS = 400
-const OVERLAP_TOKENS = 60
+const MAX_TOKENS = 300
+const OVERLAP_TOKENS = 50
 
 interface Section {
     heading: string | null
