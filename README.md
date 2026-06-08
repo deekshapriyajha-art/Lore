@@ -1,5 +1,9 @@
 # Lore
 
+![Demo](assets/chat.png)
+
+![Demo](assets/admin.png)
+
 I built Lore to solve a problem - joining a project or exploring a new library and spending way too long reading through READMEs trying to understand how things work.
 
 Lore lets you point it at any GitHub repository and just ask questions about it in plain English. It reads the docs, understands them, and answers you directly — with citations so you know exactly where the answer came from.
