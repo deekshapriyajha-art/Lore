@@ -42,6 +42,23 @@ export const MessageBubble = ({ message }: Props) => {
                         </div>
                     </div>
                 )}
+
+                {message.toolCalls && message.toolCalls.length > 0 && (
+                    <div className="mt-2 flex flex-col gap-1">
+                        {message.toolCalls.map((tc, idx) => (
+                            <div key={idx} className="flex items-center gap-2 text-xs text-gray-400">
+                                <span className={`w-2 h-2 rounded-full ${tc.status === 'running' ? 'bg-yellow-400 animate-pulse' :
+                                    tc.status === 'done' ? 'bg-green-400' :
+                                        'bg-red-400'
+                                    }`} />
+                                {tc.tool === 'search_knowledge_base' && `Searching for "${tc.args.query}"`}
+                                {tc.tool === 'ingest_repository' && `Ingesting ${tc.args.url}`}
+                                {tc.tool === 'get_document_list' && 'Getting document list'}
+                                {tc.tool === 'summarize_document' && `Summarizing ${tc.args.title}`}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     )

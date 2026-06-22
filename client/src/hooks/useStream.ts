@@ -3,7 +3,7 @@ import { Message, Source } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-export function useStream() {
+export function useStream(endpoint: string = '/api/query') {
     const [messages, setMessages] = useState<Message[]>([])
     const [isLoading, setIsLoading] = useState(false)
 
@@ -26,7 +26,7 @@ export function useStream() {
         setIsLoading(true)
 
         try {
-            const response = await fetch(`${BASE_URL}/api/query`, {
+            const response = await fetch(`${BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question })
@@ -73,6 +73,35 @@ export function useStream() {
                                     : msg
                             ))
                         }
+
+                        if (data.type === 'tool_call') {
+                            setMessages(prev => prev.map(msg =>
+                                msg.id === assistantMessage.id
+                                    ? {
+                                        ...msg,
+                                        toolCalls: [
+                                            ...(msg.toolCalls ?? []),
+                                            { tool: data.tool, args: data.args, status: 'running' }
+                                        ]
+                                    }
+                                    : msg
+                            ))
+                        }
+
+                        if (data.type === 'tool_result') {
+                            setMessages(prev => prev.map(msg =>
+                                msg.id === assistantMessage.id
+                                    ? {
+                                        ...msg,
+                                        toolCalls: (msg.toolCalls ?? []).map((tc: any) =>
+                                            tc.tool === data.tool
+                                                ? { ...tc, status: data.success ? 'done' : 'failed' }
+                                                : tc
+                                        )
+                                    }
+                                    : msg
+                            ))
+                        }
                     } catch {
                         //skip
                     }
@@ -92,7 +121,7 @@ export function useStream() {
         } finally {
             setIsLoading(false)
         }
-    }, [])
+    }, [endpoint])
 
     const clearMessages = useCallback(() => {
         setMessages([])

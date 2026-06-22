@@ -5,6 +5,7 @@ import express from 'express';
 import helmet from 'helmet';
 import logger from './lib/logger';
 import { ingestRouter } from './routes/ingest';
+import { agentRouter } from './routes/agent';
 import { retrieveRelevantChunks } from './query/retriever'
 import { queryRouter } from './routes/query';
 import { errorHandler } from './middleware/errorHandler';
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api', ingestRouter);
 app.use('/api', queryRouter);
+app.use('/api', agentRouter);
 
 app.use(errorHandler);
 

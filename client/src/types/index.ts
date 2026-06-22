@@ -32,3 +32,18 @@ export interface Job {
     finished_at: string | null
     created_at: string
 }
+
+export interface ToolCall {
+    tool: string
+    args: Record<string, unknown>
+    status: 'running' | 'done' | 'failed'
+}
+
+export interface Message {
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    sources?: Source[]
+    toolCalls?: ToolCall[]
+    isStreaming?: boolean
+}
